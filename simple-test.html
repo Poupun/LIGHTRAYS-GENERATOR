@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Light Rays Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .test-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at 100% 0%,
+                rgba(0, 255, 127, 0.3) 0%,
+                rgba(0, 255, 127, 0.1) 30%,
+                transparent 60%
+            );
+        }
+
+        .test-ray {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 255, 127, 0.8) 0%,
+                rgba(0, 255, 127, 0.4) 50%,
+                transparent 100%
+            );
+            transform-origin: 100% 0%;
+            transform: rotate(0deg);
+            animation: ray-pulse 3s ease-in-out infinite alternate;
+        }
+
+        .test-ray:nth-child(2) {
+            transform: rotate(15deg);
+            animation-delay: 0.5s;
+        }
+
+        .test-ray:nth-child(3) {
+            transform: rotate(-15deg);
+            animation-delay: 1s;
+        }
+
+        @keyframes ray-pulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-ray"></div>
+        <div class="test-ray"></div>
+        <div class="test-ray"></div>
+    </div>
+
+    <script>
+        console.log('🧪 Simple test loaded');
+        console.log('✅ If you see green light rays, the basic concept works');
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light Rays Generator - Create & Embed Beautiful Light Effects</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Light Rays Generator</h1>
+            <p>Create stunning light ray effects and generate embeddable iframe links for your projects</p>
+        </div>
+
+        <div class="main-content">
+            <div class="preview-area" id="preview">
+                <div class="preview-content">
+                    <h3>Your Light Rays</h3>
+                    <p>Customize the settings and see your beautiful light rays in real-time</p>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <h2 class="controls-title">🎮 Customize Your Light Rays</h2>
+
+                <div class="control-group">
+                    <label for="color">Color</label>
+                    <input type="color" id="color" value="#00ff7f">
+                </div>
+
+                <div class="control-group">
+                    <label for="intensity">Intensity <span class="value-display" id="intensity-value">0.6</span></label>
+                    <input type="range" id="intensity" min="0.1" max="1" step="0.1" value="0.6">
+                </div>
+
+                <div class="control-group">
+                    <label for="rayCount">Ray Count <span class="value-display" id="rayCount-value">12</span></label>
+                    <input type="range" id="rayCount" min="4" max="30" step="1" value="12">
+                </div>
+
+                <div class="control-group">
+                    <label for="rayWidth">Ray Width <span class="value-display" id="rayWidth-value">80px</span></label>
+                    <input type="range" id="rayWidth" min="20" max="300" step="10" value="80">
+                </div>
+
+                <div class="control-group">
+                    <label for="rayHeight">Ray Height <span class="value-display" id="rayHeight-value">120vh</span></label>
+                    <input type="range" id="rayHeight" min="50" max="300" step="10" value="120">
+                </div>
+
+                <div class="control-group">
+                    <label for="lightX">Light X Position <span class="value-display" id="lightX-value">100%</span></label>
+                    <input type="range" id="lightX" min="0" max="100" step="5" value="100">
+                </div>
+
+                <div class="control-group">
+                    <label for="lightY">Light Y Position <span class="value-display" id="lightY-value">0%</span></label>
+                    <input type="range" id="lightY" min="-100" max="100" step="5" value="0">
+                </div>
+
+                <div class="control-group">
+                    <label for="animationSpeed1">Layer 1 Speed <span class="value-display" id="animationSpeed1-value">1.0x</span></label>
+                    <input type="range" id="animationSpeed1" min="0.1" max="3" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="animationSpeed2">Layer 2 Speed <span class="value-display" id="animationSpeed2-value">1.0x</span></label>
+                    <input type="range" id="animationSpeed2" min="0.1" max="3" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label>Animation</label>
+                    <button class="toggle-button active" id="animated">ON</button>
+                </div>
+
+                <div class="control-group">
+                    <label>Blur Effect</label>
+                    <button class="toggle-button active" id="blurEnabled">ON</button>
+                </div>
+
+                <div class="control-group">
+                    <label>Quick Presets</label>
+                    <div class="preset-buttons">
+                        <button class="preset-button" onclick="applyPreset('soft')">Soft Dreamy</button>
+                        <button class="preset-button" onclick="applyPreset('neon')">Neon Club</button>
+                        <button class="preset-button" onclick="applyPreset('ethereal')">Ethereal Glow</button>
+                        <button class="preset-button" onclick="applyPreset('cinema')">Cinematic</button>
+                        <button class="preset-button" onclick="applyPreset('ticket')">Ticket Hub</button>
+                        <button class="preset-button" onclick="applyPreset('forest')">Forest Light</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="generate-section">
+            <h3 style="margin-bottom: 1rem;">🔗 Generate Embeddable iframe</h3>
+            <p style="margin-bottom: 1.5rem; opacity: 0.8;">Copy the generated iframe code and paste it into any website</p>
+            <button class="generate-button" onclick="generateEmbedCode()">
+                🚀 Generate Embed Code
+            </button>
+            <div class="iframe-output" id="iframe-output">
+                <div style="margin-bottom: 1rem; font-weight: bold;">📋 Generated Embed Code:</div>
+                <div id="iframe-code"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="generator.js"></script>
+</body>
+</html>
