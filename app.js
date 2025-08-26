@@ -29,6 +29,7 @@ class LightRaysApp {
         this.createLightRays();
         this.updateAnimationControls();
         this.updateJavaScriptButtonColor(this.config.color);
+        this.updateAppColorScheme(this.config.color);
     }
 
     bindEvents() {
@@ -38,6 +39,7 @@ class LightRaysApp {
             this.updateConfig({ color: e.target.value });
             document.querySelector('.color-value').textContent = e.target.value;
             this.updateJavaScriptButtonColor(e.target.value);
+            this.updateAppColorScheme(e.target.value);
         });
 
         // Range inputs
@@ -281,12 +283,137 @@ class LightRaysApp {
         const embedCode = this.createJavaScriptEmbedCode();
         this.showEmbedOutput('JavaScript Widget', embedCode);
         this.createEmbedPreview(embedCode, 'javascript');
+        this.animateEmbedOutput();
     }
 
     generateReactWidget() {
         const embedCode = this.createReactWidgetCode();
         this.showEmbedOutput('React Widget', embedCode);
         this.createEmbedPreview(embedCode, 'react');
+        this.animateEmbedOutput();
+    }
+
+    animateEmbedOutput() {
+        // Animate the embed output appearing
+        const embedOutput = document.getElementById('embed-output');
+        if (embedOutput && embedOutput.style.display !== 'none') {
+            embedOutput.classList.add('slide-in');
+            setTimeout(() => {
+                embedOutput.classList.remove('slide-in');
+            }, 800);
+        }
+    }
+
+    updateAppColorScheme(hexColor) {
+        // Convert hex to RGB
+        const rgb = this.hexToRgb(hexColor);
+        if (!rgb) return;
+
+        // Create nuanced color variations
+        const hsl = this.rgbToHsl(rgb.r, rgb.g, rgb.b);
+        
+        // Primary: Use original color
+        const primary = hexColor;
+        
+        // Secondary: Shift hue by 30 degrees and adjust saturation
+        const secondaryHsl = {
+            h: (hsl.h + 30) % 360,
+            s: Math.min(100, hsl.s * 1.2),
+            l: Math.max(30, Math.min(70, hsl.l))
+        };
+        const secondary = this.hslToHex(secondaryHsl.h, secondaryHsl.s, secondaryHsl.l);
+        
+        // Muted: Desaturate and darken
+        const mutedHsl = {
+            h: hsl.h,
+            s: Math.max(20, hsl.s * 0.4),
+            l: Math.max(25, Math.min(45, hsl.l * 0.7))
+        };
+        const muted = this.hslToHex(mutedHsl.h, mutedHsl.s, mutedHsl.l);
+        
+        // Gradient colors: Primary to Secondary
+        const gradientStart = primary;
+        const gradientEnd = secondary;
+
+        // Update CSS custom properties
+        const root = document.documentElement;
+        root.style.setProperty('--dynamic-primary', primary);
+        root.style.setProperty('--dynamic-primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+        root.style.setProperty('--dynamic-secondary', secondary);
+        root.style.setProperty('--dynamic-muted', muted);
+        root.style.setProperty('--dynamic-gradient-start', gradientStart);
+        root.style.setProperty('--dynamic-gradient-end', gradientEnd);
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    rgbToHsl(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return {
+            h: Math.round(h * 360),
+            s: Math.round(s * 100),
+            l: Math.round(l * 100)
+        };
+    }
+
+    hslToHex(h, s, l) {
+        h /= 360;
+        s /= 100;
+        l /= 100;
+
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+
+        let r, g, b;
+        if (s === 0) {
+            r = g = b = l; // achromatic
+        } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        const toHex = (c) => {
+            const hex = Math.round(c * 255).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        };
+
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
 
     createJavaScriptEmbedCode() {
@@ -772,14 +899,7 @@ export default LightRays;
                     currentX = clientX - initialX;
                     currentY = clientY - initialY;
 
-                    // Constrain to viewport
-                    const rect = element.getBoundingClientRect();
-                    const maxX = window.innerWidth - rect.width;
-                    const maxY = window.innerHeight - rect.height;
-                    
-                    currentX = Math.max(-rect.left, Math.min(currentX, maxX - rect.left));
-                    currentY = Math.max(-rect.top, Math.min(currentY, maxY - rect.top));
-
+                    // No viewport constraints - allow dragging outside screen
                     element.style.transform = `translate(${currentX}px, ${currentY}px)`;
                 }
             };

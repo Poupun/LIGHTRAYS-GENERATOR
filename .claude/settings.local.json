@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"\" \"C:\\Users\\User\\OneDrive\\Documents\\- JELLY\\LIGHTRAYS-GENERATOR\\index.html\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
