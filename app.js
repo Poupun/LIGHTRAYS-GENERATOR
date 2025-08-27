@@ -17,7 +17,9 @@ class LightRaysApp {
             animationSpeed1: 3.0,
             animationSpeed2: 3.0,
             animated: true,
-            blurEnabled: true
+            blurEnabled: true,
+            backgroundEnabled: false,
+            backgroundColor: '#000000'
         };
         
         this.init();
@@ -28,8 +30,10 @@ class LightRaysApp {
         this.initDragFunctionality();
         this.createLightRays();
         this.updateAnimationControls();
+        this.updateBackgroundControls();
         this.updateJavaScriptButtonColor(this.config.color);
         this.updateAppColorScheme(this.config.color);
+        this.updatePreviewBackground();
     }
 
     bindEvents() {
@@ -40,6 +44,14 @@ class LightRaysApp {
             document.querySelector('.color-value').textContent = e.target.value;
             this.updateJavaScriptButtonColor(e.target.value);
             this.updateAppColorScheme(e.target.value);
+        });
+
+        // Background color input
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        backgroundColorInput.addEventListener('input', (e) => {
+            this.updateConfig({ backgroundColor: e.target.value });
+            document.getElementById('background-color-value').textContent = e.target.value;
+            this.updatePreviewBackground();
         });
 
         // Range inputs
@@ -60,7 +72,7 @@ class LightRaysApp {
         });
 
         // Toggle inputs
-        const toggleInputs = ['animated', 'blurEnabled'];
+        const toggleInputs = ['animated', 'blurEnabled', 'backgroundEnabled'];
         toggleInputs.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
@@ -68,6 +80,9 @@ class LightRaysApp {
                     this.updateConfig({ [id]: e.target.checked });
                     if (id === 'animated') {
                         this.updateAnimationControls();
+                    } else if (id === 'backgroundEnabled') {
+                        this.updateBackgroundControls();
+                        this.updatePreviewBackground();
                     }
                 });
             }
@@ -178,6 +193,27 @@ class LightRaysApp {
         }
     }
 
+    updateBackgroundControls() {
+        const backgroundColorControl = document.getElementById('background-color-control');
+        const isBackgroundEnabled = this.config.backgroundEnabled;
+
+        if (backgroundColorControl) {
+            backgroundColorControl.style.opacity = isBackgroundEnabled ? '1' : '0.5';
+            backgroundColorControl.style.pointerEvents = isBackgroundEnabled ? 'auto' : 'none';
+        }
+    }
+
+    updatePreviewBackground() {
+        const previewContainer = document.getElementById('preview-container');
+        if (previewContainer) {
+            if (this.config.backgroundEnabled) {
+                previewContainer.style.backgroundColor = this.config.backgroundColor;
+            } else {
+                previewContainer.style.backgroundColor = 'transparent';
+            }
+        }
+    }
+
     updateJavaScriptButtonColor(color) {
         const button = document.getElementById('generate-js-btn');
         if (!button) return;
@@ -215,7 +251,9 @@ class LightRaysApp {
             animationSpeed1: 3.0,
             animationSpeed2: 3.0,
             animated: true,
-            blurEnabled: true
+            blurEnabled: true,
+            backgroundEnabled: false,
+            backgroundColor: '#000000'
         };
 
         this.config = { ...defaultConfig };
@@ -229,6 +267,8 @@ class LightRaysApp {
                 element.value = value;
                 if (key === 'color') {
                     document.querySelector('.color-value').textContent = value;
+                } else if (key === 'backgroundColor') {
+                    document.getElementById('background-color-value').textContent = value;
                 } else {
                     this.updateValueDisplay(key, value);
                 }
@@ -239,7 +279,9 @@ class LightRaysApp {
 
         this.createLightRays();
         this.updateAnimationControls();
+        this.updateBackgroundControls();
         this.updateJavaScriptButtonColor(defaultConfig.color);
+        this.updatePreviewBackground();
         this.showNotification('Reset to default settings');
     }
 
@@ -281,14 +323,14 @@ class LightRaysApp {
 
     generateJavaScriptEmbed() {
         const embedCode = this.createJavaScriptEmbedCode();
-        this.showEmbedOutput('JavaScript Widget', embedCode);
-        this.createEmbedPreview(embedCode, 'javascript');
+        this.showEmbedOutput('Iframe Embed Code', embedCode);
+        this.createEmbedPreview(embedCode, 'iframe');
         this.animateEmbedOutput();
     }
 
     generateReactWidget() {
         const embedCode = this.createReactWidgetCode();
-        this.showEmbedOutput('React Widget', embedCode);
+        this.showEmbedOutput('React Iframe Component', embedCode);
         this.createEmbedPreview(embedCode, 'react');
         this.animateEmbedOutput();
     }
@@ -416,279 +458,113 @@ class LightRaysApp {
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
 
+    generateEmbedUrl() {
+        // Get the current host and path for the embed URL
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '') + 'embed.html';
+        const params = new URLSearchParams();
+        
+        // Add config parameters to URL
+        Object.entries(this.config).forEach(([key, value]) => {
+            if ((key === 'color' || key === 'backgroundColor') && value.startsWith('#')) {
+                params.append(key, value.substring(1)); // Remove # for URL
+            } else {
+                params.append(key, value.toString());
+            }
+        });
+        
+        return `${baseUrl}?${params.toString()}`;
+    }
+
     createJavaScriptEmbedCode() {
-        const configJson = JSON.stringify(this.config, null, 2);
+        const embedUrl = this.generateEmbedUrl();
         
-        return `<!-- Light Rays Widget - Full Screen -->
-<div id="light-rays-widget" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; overflow: hidden;"></div>
-
-<script>
-// Light Rays Engine - Inline Version
-class LightRaysEngine {
-    constructor(container, config = {}) {
-        this.container = typeof container === 'string' ? document.querySelector(container) : container;
-        if (!this.container) throw new Error('Container element not found');
-        
-        this.config = {
-            color: '#00ff7f', intensity: 0.6, rayCount: 12, rayWidth: 80, rayHeight: 120,
-            lightX: 100, lightY: 0, animationSpeed1: 1, animationSpeed2: 1,
-            animated: true, blurEnabled: true, ...config
-        };
-        
-        this.init();
-    }
-    
-    init() {
-        this.createRayContainer();
-        this.generateRays();
-    }
-    
-    createRayContainer() {
-        if (this.rayContainer) this.rayContainer.remove();
-        this.rayContainer = document.createElement('div');
-        this.rayContainer.className = 'light-rays-container';
-        this.rayContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:1;';
-        this.container.style.position = 'relative';
-        this.container.appendChild(this.rayContainer);
-        this.applyCSSVariables();
-    }
-    
-    applyCSSVariables() {
-        const rgb = this.hexToRgb(this.config.color);
-        const vars = [
-            '--primary-color', this.config.color,
-            '--ray-r', rgb.r, '--ray-g', rgb.g, '--ray-b', rgb.b,
-            '--intensity', this.config.intensity,
-            '--light-x', this.config.lightX + '%', '--light-y', this.config.lightY + '%',
-            '--ray-width', this.config.rayWidth + 'px', '--ray-height', this.config.rayHeight + 'vh',
-            '--animation-speed1', this.config.animationSpeed1, '--animation-speed2', this.config.animationSpeed2
-        ];
-        for (let i = 0; i < vars.length; i += 2) this.rayContainer.style.setProperty(vars[i], vars[i + 1]);
-    }
-    
-    hexToRgb(hex) {
-        const result = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(hex);
-        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 255, b: 127 };
-    }
-    
-    createStyleSheet() {
-        if (document.getElementById('light-rays-styles-inline')) return;
-        const style = document.createElement('style');
-        style.id = 'light-rays-styles-inline';
-        style.textContent = \`
-            .light-rays-ambient{position:absolute;top:var(--light-y);left:var(--light-x);width:200%;height:200%;background:conic-gradient(from 225deg at center,transparent 0deg,rgba(var(--ray-r),var(--ray-g),var(--ray-b),calc(var(--intensity)*0.3)) 45deg,rgba(var(--ray-r),var(--ray-g),var(--ray-b),calc(var(--intensity)*0.1)) 90deg,transparent 135deg);transform:translate(-50%,-50%);opacity:var(--intensity);\${this.config.animated?'animation:lr-gentle-pulse calc(4s/var(--animation-speed1)) ease-in-out infinite alternate;':''}filter:blur(\${this.config.blurEnabled?'60px':'20px'});}
-            .light-rays-ray{position:absolute;top:var(--light-y);left:var(--light-x);width:var(--ray-width);height:var(--ray-height);transform-origin:50% 0%;transform:translate(-50%,-50%) rotate(var(--angle));opacity:var(--opacity);\${this.config.blurEnabled?'background:radial-gradient(ellipse calc(var(--ray-width)/2) var(--ray-height) at center 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.9) 8%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.7) 20%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.5) 35%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.3) 50%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.2) 65%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.1) 80%,transparent 100%);filter:blur(calc(var(--ray-width)/12)) saturate(1.2);':'background:linear-gradient(to bottom,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.9) 15%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.6) 30%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.4) 50%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.2) 70%,transparent 100%);clip-path:polygon(45% 0%,55% 0%,100% 100%,0% 100%);'}}
-            .light-rays-ray.layer1{\${this.config.animated?'animation:lr-ray-shimmer calc(3s/var(--animation-speed1)) ease-in-out infinite alternate,lr-ray-sway calc(8s/var(--animation-speed1)) ease-in-out infinite;':''}animation-delay:var(--delay);}
-            .light-rays-ray.layer2{\${this.config.animated?'animation:lr-ray-shimmer-2 calc(4s/var(--animation-speed2)) ease-in-out infinite alternate,lr-ray-sway-2 calc(10s/var(--animation-speed2)) ease-in-out infinite;':''}animation-delay:calc(var(--delay) + 1.5s);}
-            .light-rays-central{position:absolute;top:calc(var(--light-y) - 100px);left:calc(var(--light-x) - 100px);width:200px;height:200px;background:radial-gradient(circle,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.8) 20%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.4) 40%,transparent 70%);border-radius:50%;opacity:calc(var(--intensity)*0.8);\${this.config.animated?'animation:lr-central-glow-pulse 3s ease-in-out infinite alternate;':''}filter:blur(\${this.config.blurEnabled?'30px':'10px'});}
-            @keyframes lr-ray-shimmer{0%{opacity:var(--opacity);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1);}100%{opacity:calc(var(--opacity)*1.5);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1.1);}}
-            @keyframes lr-ray-sway{0%,100%{transform:translate(-50%,-50%) rotate(var(--angle));}50%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 2deg));}}
-            @keyframes lr-ray-shimmer-2{0%{opacity:calc(var(--opacity)*0.8);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(0.9) translateX(2px);}100%{opacity:calc(var(--opacity)*1.3);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1.15) translateX(-2px);}}
-            @keyframes lr-ray-sway-2{0%,100%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 1deg));}25%{transform:translate(-50%,-50%) rotate(calc(var(--angle) - 1deg));}75%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 3deg));}}
-            @keyframes lr-gentle-pulse{0%{opacity:calc(var(--intensity)*0.6);transform:translate(-50%,-50%) scale(0.95);}100%{opacity:calc(var(--intensity)*0.9);transform:translate(-50%,-50%) scale(1.05);}}
-            @keyframes lr-central-glow-pulse{0%{opacity:calc(var(--intensity)*0.8);transform:scale(0.9);}100%{opacity:calc(var(--intensity)*1.2);transform:scale(1.1);}}
-        \`;
-        document.head.appendChild(style);
-    }
-    
-    generateRays() {
-        this.rayContainer.innerHTML = '';
-        this.createStyleSheet();
-        
-        const ambient = document.createElement('div');
-        ambient.className = 'light-rays-ambient';
-        this.rayContainer.appendChild(ambient);
-        
-        this.generateRayLayer(1, this.config.rayCount, 0, 1, 1.5, 1, 1);
-        this.generateRayLayer(2, Math.floor(this.config.rayCount * 0.7), 15, 0.8, 1.2, 0.9, 0.8);
-        
-        const central = document.createElement('div');
-        central.className = 'light-rays-central';
-        this.rayContainer.appendChild(central);
-    }
-    
-    generateRayLayer(layer, count, angleOffset, sizeMultiplier, softMultiplier, heightMultiplier, opacityMultiplier) {
-        for (let i = 0; i < count; i++) {
-            const angle = (360 / count) * i + angleOffset;
-            const delay = i * (layer === 1 ? 0.1 : 0.15) + (layer === 2 ? 0.5 : 0);
-            const baseOpacity = (0.3 + (Math.random() * 0.4)) * opacityMultiplier;
-            this.createRay({ angle, delay, opacity: baseOpacity, layer });
-        }
-    }
-    
-    createRay({ angle, delay, opacity, layer }) {
-        const ray = document.createElement('div');
-        ray.className = \`light-rays-ray layer\${layer}\`;
-        ray.style.setProperty('--angle', angle + 'deg');
-        ray.style.setProperty('--delay', delay + 's');
-        ray.style.setProperty('--opacity', opacity.toString());
-        this.rayContainer.appendChild(ray);
-    }
-}
-
-// Initialize the widget
-new LightRaysEngine('#light-rays-widget', ${configJson});
-</script>`;
+        return `<!-- Light Rays Embed -->
+<iframe 
+    src="${embedUrl}" 
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; border: none; z-index: 9999;"
+    frameborder="0"
+    allowfullscreen>
+</iframe>`;
     }
 
     createReactWidgetCode() {
-        const configJson = JSON.stringify(this.config, null, 2);
+        const embedUrl = this.generateEmbedUrl();
         
-        return `// Light Rays React Component
-import React, { useEffect, useRef } from 'react';
+        return `// Light Rays React Component - Iframe Version
+import React from 'react';
 
-const LightRays = ({ config = ${configJson} }) => {
-  const containerRef = useRef(null);
-  const engineRef = useRef(null);
-
-  useEffect(() => {
-    // Light Rays Engine Class
-    class LightRaysEngine {
-      constructor(container, config = {}) {
-        this.container = container;
-        this.config = {
-          color: '#2fc125', intensity: 0.8, rayCount: 30, rayWidth: 240, rayHeight: 180,
-          lightX: 100, lightY: -5, animationSpeed1: 3.0, animationSpeed2: 3.0,
-          animated: true, blurEnabled: true, ...config
-        };
-        this.init();
-      }
-      
-      init() {
-        this.createRayContainer();
-        this.generateRays();
-      }
-      
-      createRayContainer() {
-        if (this.rayContainer) this.rayContainer.remove();
-        this.rayContainer = document.createElement('div');
-        this.rayContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:1;';
-        this.container.style.position = 'relative';
-        this.container.appendChild(this.rayContainer);
-        this.applyCSSVariables();
-      }
-      
-      applyCSSVariables() {
-        const rgb = this.hexToRgb(this.config.color);
-        const vars = [
-          ['--primary-color', this.config.color],
-          ['--ray-r', rgb.r], ['--ray-g', rgb.g], ['--ray-b', rgb.b],
-          ['--intensity', this.config.intensity],
-          ['--light-x', this.config.lightX + '%'], ['--light-y', this.config.lightY + '%'],
-          ['--ray-width', this.config.rayWidth + 'px'], ['--ray-height', this.config.rayHeight + 'vh'],
-          ['--animation-speed1', this.config.animationSpeed1], ['--animation-speed2', this.config.animationSpeed2]
-        ];
-        vars.forEach(([prop, val]) => this.rayContainer.style.setProperty(prop, val.toString()));
-      }
-      
-      hexToRgb(hex) {
-        const result = /^#?([a-f\\\\d]{2})([a-f\\\\d]{2})([a-f\\\\d]{2})$/i.exec(hex);
-        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 47, g: 193, b: 37 };
-      }
-      
-      createStyleSheet() {
-        if (document.getElementById('lr-styles-react')) return;
-        const style = document.createElement('style');
-        style.id = 'lr-styles-react';
-        style.textContent = \`
-          .lr-ambient{position:absolute;top:var(--light-y);left:var(--light-x);width:200%;height:200%;background:conic-gradient(from 225deg at center,transparent 0deg,rgba(var(--ray-r),var(--ray-g),var(--ray-b),calc(var(--intensity)*0.3)) 45deg,rgba(var(--ray-r),var(--ray-g),var(--ray-b),calc(var(--intensity)*0.1)) 90deg,transparent 135deg);transform:translate(-50%,-50%);opacity:var(--intensity);\${this.config.animated?'animation:lr-pulse calc(4s/var(--animation-speed1)) ease-in-out infinite alternate;':''}filter:blur(\${this.config.blurEnabled?'60px':'20px'});}
-          .lr-ray{position:absolute;top:var(--light-y);left:var(--light-x);width:var(--ray-width);height:var(--ray-height);transform-origin:50% 0%;transform:translate(-50%,-50%) rotate(var(--angle));opacity:var(--opacity);\${this.config.blurEnabled?'background:radial-gradient(ellipse calc(var(--ray-width)/2) var(--ray-height) at center 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.9) 8%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.7) 20%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.5) 35%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.3) 50%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.2) 65%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.1) 80%,transparent 100%);filter:blur(calc(var(--ray-width)/12)) saturate(1.2);':'background:linear-gradient(to bottom,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.9) 15%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.6) 30%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.4) 50%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.2) 70%,transparent 100%);clip-path:polygon(45% 0%,55% 0%,100% 100%,0% 100%);'}}
-          .lr-ray.l1{\${this.config.animated?'animation:lr-shimmer calc(3s/var(--animation-speed1)) ease-in-out infinite alternate,lr-sway calc(8s/var(--animation-speed1)) ease-in-out infinite;':''}animation-delay:var(--delay);}
-          .lr-ray.l2{\${this.config.animated?'animation:lr-shimmer2 calc(4s/var(--animation-speed2)) ease-in-out infinite alternate,lr-sway2 calc(10s/var(--animation-speed2)) ease-in-out infinite;':''}animation-delay:calc(var(--delay) + 1.5s);}
-          .lr-central{position:absolute;top:calc(var(--light-y) - 100px);left:calc(var(--light-x) - 100px);width:200px;height:200px;background:radial-gradient(circle,rgba(var(--ray-r),var(--ray-g),var(--ray-b),1) 0%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.8) 20%,rgba(var(--ray-r),var(--ray-g),var(--ray-b),0.4) 40%,transparent 70%);border-radius:50%;opacity:calc(var(--intensity)*0.8);\${this.config.animated?'animation:lr-glow 3s ease-in-out infinite alternate;':''}filter:blur(\${this.config.blurEnabled?'30px':'10px'});}
-          @keyframes lr-shimmer{0%{opacity:var(--opacity);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1);}100%{opacity:calc(var(--opacity)*1.5);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1.1);}}
-          @keyframes lr-sway{0%,100%{transform:translate(-50%,-50%) rotate(var(--angle));}50%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 2deg));}}
-          @keyframes lr-shimmer2{0%{opacity:calc(var(--opacity)*0.8);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(0.9) translateX(2px);}100%{opacity:calc(var(--opacity)*1.3);transform:translate(-50%,-50%) rotate(var(--angle)) scaleY(1.15) translateX(-2px);}}
-          @keyframes lr-sway2{0%,100%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 1deg));}25%{transform:translate(-50%,-50%) rotate(calc(var(--angle) - 1deg));}75%{transform:translate(-50%,-50%) rotate(calc(var(--angle) + 3deg));}}
-          @keyframes lr-pulse{0%{opacity:calc(var(--intensity)*0.6);transform:translate(-50%,-50%) scale(0.95);}100%{opacity:calc(var(--intensity)*0.9);transform:translate(-50%,-50%) scale(1.05);}}
-          @keyframes lr-glow{0%{opacity:calc(var(--intensity)*0.8);transform:scale(0.9);}100%{opacity:calc(var(--intensity)*1.2);transform:scale(1.1);}}
-        \`;
-        document.head.appendChild(style);
-      }
-      
-      generateRays() {
-        this.rayContainer.innerHTML = '';
-        this.createStyleSheet();
-        
-        const ambient = document.createElement('div');
-        ambient.className = 'lr-ambient';
-        this.rayContainer.appendChild(ambient);
-        
-        this.generateRayLayer(1, this.config.rayCount, 0);
-        this.generateRayLayer(2, Math.floor(this.config.rayCount * 0.7), 15);
-        
-        const central = document.createElement('div');
-        central.className = 'lr-central';
-        this.rayContainer.appendChild(central);
-      }
-      
-      generateRayLayer(layer, count, angleOffset) {
-        for (let i = 0; i < count; i++) {
-          const angle = (360 / count) * i + angleOffset;
-          const delay = i * (layer === 1 ? 0.1 : 0.15) + (layer === 2 ? 0.5 : 0);
-          const baseOpacity = (0.3 + (Math.random() * 0.4)) * (layer === 1 ? 1 : 0.8);
-          this.createRay({ angle, delay, opacity: baseOpacity, layer });
-        }
-      }
-      
-      createRay({ angle, delay, opacity, layer }) {
-        const ray = document.createElement('div');
-        ray.className = \`lr-ray l\${layer}\`;
-        ray.style.setProperty('--angle', angle + 'deg');
-        ray.style.setProperty('--delay', delay + 's');
-        ray.style.setProperty('--opacity', opacity.toString());
-        this.rayContainer.appendChild(ray);
-      }
-      
-      destroy() {
-        if (this.rayContainer) this.rayContainer.remove();
-      }
-    }
-
-    // Initialize the engine
-    if (containerRef.current && !engineRef.current) {
-      engineRef.current = new LightRaysEngine(containerRef.current, config);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (engineRef.current) {
-        engineRef.current.destroy();
-        engineRef.current = null;
-      }
-    };
-  }, [config]);
+const LightRays = ({ 
+  style = {}, 
+  width = '100%', 
+  height = '400px',
+  customEmbedUrl = null 
+}) => {
+  const embedSrc = customEmbedUrl || '${embedUrl}';
+  
+  const defaultStyle = {
+    position: 'relative',
+    width: width,
+    height: height,
+    overflow: 'hidden',
+    ...style
+  };
 
   return (
-    <div 
-      ref={containerRef}
+    <div style={defaultStyle}>
+      <iframe 
+        src={embedSrc}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          border: 'none'
+        }}
+        frameBorder="0"
+        title="Light Rays"
+      />
+    </div>
+  );
+};
+
+// Full Screen Overlay Component
+export const LightRaysFullScreen = ({ customEmbedUrl = null }) => {
+  const embedSrc = customEmbedUrl || '${embedUrl}';
+  
+  return (
+    <iframe 
+      src={embedSrc}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
-        background: '#000',
-        zIndex: 9999,
-        overflow: 'hidden'
+        border: 'none',
+        zIndex: 9999
       }}
+      frameBorder="0"
+      allowFullScreen
+      title="Light Rays Full Screen"
     />
   );
 };
 
 export default LightRays;
 
-// Usage Example:
-// import LightRays from './LightRays';
+// Usage Examples:
 //
-// function App() {
-//   return (
-//     <div>
-//       <LightRays />
-//       {/* Your other components */}
-//     </div>
-//   );
-// }`;
+// Basic usage:
+// import LightRays from './LightRays';
+// <LightRays width="800px" height="600px" />
+//
+// Full screen overlay:
+// import { LightRaysFullScreen } from './LightRays';
+// <LightRaysFullScreen />
+//
+// With custom embed URL (different config):
+// <LightRays customEmbedUrl="https://your-domain.com/embed.html?color=ff0000&intensity=0.9" />`;
     }
 
 
@@ -714,22 +590,36 @@ export default LightRays;
 
         const previewContainer = document.getElementById('embed-preview');
         
-        if (type === 'javascript') {
-            // Create a sandboxed preview
-            previewContainer.innerHTML = '<div id="preview-widget" style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden;"></div>';
-            
-            // Initialize preview widget
-            setTimeout(() => {
-                try {
-                    new LightRaysEngine('#preview-widget', this.config);
-                } catch (error) {
-                    console.error('Preview error:', error);
-                    previewContainer.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.9rem;">Preview: Light rays will appear when embedded</p>`;
-                }
-            }, 100);
+        if (type === 'iframe') {
+            // Create a small iframe preview
+            const embedUrl = this.generateEmbedUrl();
+            previewContainer.innerHTML = `
+                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
+                    <iframe 
+                        src="${embedUrl}" 
+                        style="width: 100%; height: 100%; border: none;"
+                        frameborder="0">
+                    </iframe>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
+                    ↑ Live preview of your iframe embed
+                </p>
+            `;
         } else if (type === 'react') {
-            // For React widget, show a simple preview indication
-            previewContainer.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Copy and use the React component code above in your project</p>`;
+            // For React component, show iframe preview with note
+            const embedUrl = this.generateEmbedUrl();
+            previewContainer.innerHTML = `
+                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
+                    <iframe 
+                        src="${embedUrl}" 
+                        style="width: 100%; height: 100%; border: none;"
+                        frameborder="0">
+                    </iframe>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
+                    ↑ Preview of how your React component will look
+                </p>
+            `;
         }
     }
 

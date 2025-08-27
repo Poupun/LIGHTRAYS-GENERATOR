@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light Rays Embed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #embed-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="embed-container">
+        <div class="loading">Loading light rays...</div>
+    </div>
+
+    <script src="light-rays-engine.js"></script>
+    <script>
+        // Parse URL parameters for configuration
+        function getConfigFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const config = {};
+            
+            // Map URL parameters to config
+            const paramMap = {
+                'color': (val) => val.startsWith('#') ? val : '#' + val,
+                'intensity': (val) => parseFloat(val),
+                'rayCount': (val) => parseInt(val),
+                'rayWidth': (val) => parseInt(val),
+                'rayHeight': (val) => parseInt(val),
+                'lightX': (val) => parseInt(val),
+                'lightY': (val) => parseInt(val),
+                'animationSpeed1': (val) => parseFloat(val),
+                'animationSpeed2': (val) => parseFloat(val),
+                'animated': (val) => val === 'true' || val === '1',
+                'blurEnabled': (val) => val === 'true' || val === '1',
+                'backgroundEnabled': (val) => val === 'true' || val === '1',
+                'backgroundColor': (val) => val.startsWith('#') ? val : '#' + val
+            };
+            
+            for (const [key, converter] of Object.entries(paramMap)) {
+                if (params.has(key)) {
+                    try {
+                        config[key] = converter(params.get(key));
+                    } catch (e) {
+                        console.warn(`Invalid parameter ${key}:`, params.get(key));
+                    }
+                }
+            }
+            
+            return config;
+        }
+        
+        // Initialize embed
+        function initEmbed() {
+            try {
+                const container = document.getElementById('embed-container');
+                const config = getConfigFromURL();
+                
+                // Set background based on config
+                if (config.backgroundEnabled !== undefined && !config.backgroundEnabled) {
+                    container.style.background = 'transparent';
+                    document.body.style.background = 'transparent';
+                } else if (config.backgroundColor) {
+                    container.style.background = config.backgroundColor;
+                    document.body.style.background = config.backgroundColor;
+                }
+                
+                // Remove loading indicator
+                const loading = container.querySelector('.loading');
+                if (loading) loading.remove();
+                
+                // Create light rays
+                new LightRaysEngine(container, config);
+                
+                // Allow parent to communicate with iframe
+                window.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'lightRaysConfig') {
+                        // Update configuration from parent
+                        if (window.lightRaysInstance) {
+                            window.lightRaysInstance.updateConfig(event.data.config);
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Failed to initialize light rays embed:', error);
+                document.getElementById('embed-container').innerHTML = 
+                    '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-family: Arial, sans-serif;">Failed to load light rays</div>';
+            }
+        }
+        
+        // Wait for DOM and then initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initEmbed);
+        } else {
+            initEmbed();
+        }
+        
+        // Prevent context menu and text selection in embed
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+    </script>
+</body>
+</html>
