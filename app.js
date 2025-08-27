@@ -34,6 +34,7 @@ class LightRaysApp {
         this.updateJavaScriptButtonColor(this.config.color);
         this.updateAppColorScheme(this.config.color);
         this.updatePreviewBackground();
+        this.initMobileView();
     }
 
     bindEvents() {
@@ -114,6 +115,11 @@ class LightRaysApp {
         // Copy button
         document.getElementById('copy-btn').addEventListener('click', () => {
             this.copyToClipboard();
+        });
+
+        // Window resize handler for mobile detection
+        window.addEventListener('resize', () => {
+            this.handleResize();
         });
     }
 
@@ -321,17 +327,69 @@ class LightRaysApp {
         }
     }
 
+    initMobileView() {
+        // Detect if device is mobile (screen width <= 768px)
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Minimize both panels on mobile
+            const controlsPanel = document.getElementById('controls-panel');
+            const embedPanel = document.getElementById('embed-panel');
+            
+            // Add collapsed class to both panels
+            controlsPanel.classList.add('collapsed');
+            embedPanel.classList.add('collapsed');
+            
+            // Update the toggle buttons to show expand icons
+            const controlsButton = document.getElementById('toggle-controls');
+            const embedButton = document.getElementById('toggle-embed');
+            
+            const controlsIcon = controlsButton.querySelector('svg');
+            const embedIcon = embedButton.querySelector('svg');
+            
+            // Set expand icons
+            controlsIcon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
+            embedIcon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
+            
+            // Update button titles
+            controlsButton.title = 'Expand Controls';
+            embedButton.title = 'Expand Embed Panel';
+        }
+    }
+
+    handleResize() {
+        // Throttle resize events
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
+        
+        this.resizeTimeout = setTimeout(() => {
+            const isMobile = window.innerWidth <= 768;
+            const controlsPanel = document.getElementById('controls-panel');
+            const embedPanel = document.getElementById('embed-panel');
+            
+            if (isMobile) {
+                // If switching to mobile, minimize panels if they aren't already
+                if (!controlsPanel.classList.contains('collapsed')) {
+                    this.toggleControlsPanel();
+                }
+                if (!embedPanel.classList.contains('collapsed')) {
+                    this.toggleEmbedPanel();
+                }
+            }
+            // Note: We don't auto-expand when switching to desktop to preserve user preference
+        }, 250);
+    }
+
     generateJavaScriptEmbed() {
         const embedCode = this.createJavaScriptEmbedCode();
         this.showEmbedOutput('Iframe Embed Code', embedCode);
-        this.createEmbedPreview(embedCode, 'iframe');
         this.animateEmbedOutput();
     }
 
     generateReactWidget() {
         const embedCode = this.createReactWidgetCode();
         this.showEmbedOutput('React Iframe Component', embedCode);
-        this.createEmbedPreview(embedCode, 'react');
         this.animateEmbedOutput();
     }
 
@@ -579,48 +637,6 @@ export default LightRays;
 
         // Smooth scroll to output
         embedOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    createEmbedPreview(code, type) {
-        const previewOutput = document.getElementById('preview-output');
-        previewOutput.innerHTML = `
-            <h4>Live Preview:</h4>
-            <div class="embed-preview-container" id="embed-preview"></div>
-        `;
-
-        const previewContainer = document.getElementById('embed-preview');
-        
-        if (type === 'iframe') {
-            // Create a small iframe preview
-            const embedUrl = this.generateEmbedUrl();
-            previewContainer.innerHTML = `
-                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
-                    <iframe 
-                        src="${embedUrl}" 
-                        style="width: 100%; height: 100%; border: none;"
-                        frameborder="0">
-                    </iframe>
-                </div>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
-                    ↑ Live preview of your iframe embed
-                </p>
-            `;
-        } else if (type === 'react') {
-            // For React component, show iframe preview with note
-            const embedUrl = this.generateEmbedUrl();
-            previewContainer.innerHTML = `
-                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
-                    <iframe 
-                        src="${embedUrl}" 
-                        style="width: 100%; height: 100%; border: none;"
-                        frameborder="0">
-                    </iframe>
-                </div>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
-                    ↑ Preview of how your React component will look
-                </p>
-            `;
-        }
     }
 
     copyToClipboard() {
