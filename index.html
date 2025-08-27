@@ -92,6 +92,24 @@
                                         </label>
                                     </div>
                                 </div>
+
+                                <div class="control-item">
+                                    <label>Background</label>
+                                    <div class="toggle-wrapper">
+                                        <input type="checkbox" id="backgroundEnabled" class="toggle-input">
+                                        <label for="backgroundEnabled" class="toggle-label">
+                                            <span class="toggle-switch"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="control-item" id="background-color-control">
+                                    <label for="backgroundColor">Background Color</label>
+                                    <div class="color-input-wrapper">
+                                        <input type="color" id="backgroundColor" value="#000000">
+                                        <span class="color-value" id="background-color-value">#000000</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Column 2: Size & Position -->
@@ -186,16 +204,17 @@
                         <div class="embed-actions">
                             <button id="generate-js-btn" class="primary-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="16 18 22 12 16 6"></polyline>
-                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
                                 </svg>
-                                JavaScript Widget
+                                Iframe Embed
                             </button>
                             <button id="generate-react-btn" class="secondary-btn">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                                 </svg>
-                                React Widget
+                                React Iframe
                             </button>
                         </div>
 
