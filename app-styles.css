@@ -5,6 +5,11 @@
     box-sizing: border-box;
 }
 
+html {
+    background-color: #1a1a2e;
+    background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+
 :root {
     /* Dynamic Colors - Updated by JavaScript */
     --dynamic-primary: #00ff7f;
@@ -89,6 +94,25 @@ body {
     height: 100vh;
     background: rgba(0, 0, 0, 0.9);
     z-index: 1;
+}
+
+/* Centered background logo */
+.center-logo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    opacity: 0.20;
+    pointer-events: none;
+}
+
+.logo-svg {
+    display: block;
+    width: min(50vw, 600px);
+    height: auto;
+    color: #000000;
+    filter: none;
 }
 
 .preview-placeholder {
@@ -806,13 +830,13 @@ body {
 /* Credit Text */
 .credit-text {
     position: fixed;
-    bottom: 20px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
     color: rgba(255, 255, 255, 0.6);
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-style: italic;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.33);
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-sm);
     backdrop-filter: blur(10px);

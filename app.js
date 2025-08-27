@@ -117,10 +117,6 @@ class LightRaysApp {
             this.copyToClipboard();
         });
 
-        // Window resize handler for mobile detection
-        window.addEventListener('resize', () => {
-            this.handleResize();
-        });
     }
 
     createLightRays() {
@@ -328,8 +324,8 @@ class LightRaysApp {
     }
 
     initMobileView() {
-        // Detect if device is mobile (screen width <= 768px)
-        const isMobile = window.innerWidth <= 768;
+        // Detect if device is actually a mobile device
+        const isMobile = this.isMobileDevice();
         
         if (isMobile) {
             // Minimize both panels on mobile
@@ -357,28 +353,18 @@ class LightRaysApp {
         }
     }
 
-    handleResize() {
-        // Throttle resize events
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-        }
+    isMobileDevice() {
+        // Check user agent for mobile devices
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         
-        this.resizeTimeout = setTimeout(() => {
-            const isMobile = window.innerWidth <= 768;
-            const controlsPanel = document.getElementById('controls-panel');
-            const embedPanel = document.getElementById('embed-panel');
-            
-            if (isMobile) {
-                // If switching to mobile, minimize panels if they aren't already
-                if (!controlsPanel.classList.contains('collapsed')) {
-                    this.toggleControlsPanel();
-                }
-                if (!embedPanel.classList.contains('collapsed')) {
-                    this.toggleEmbedPanel();
-                }
-            }
-            // Note: We don't auto-expand when switching to desktop to preserve user preference
-        }, 250);
+        // Check for mobile user agents
+        const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+        
+        // Also check for touch capability and small screen
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        return mobileRegex.test(userAgent) || (hasTouch && isSmallScreen);
     }
 
     generateJavaScriptEmbed() {
