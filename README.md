@@ -2,7 +2,7 @@
 
 A powerful, modern web application for creating stunning light ray effects with an intuitive visual editor. Generate customizable, embeddable light rays perfect for SaaS websites, e-commerce platforms, and creative web projects.
 
-![Light Rays Generator Preview]([[https://via.placeholder.com/800x400/000000/2fc125?text=Light+Rays+Generator](https://poupun.github.io/LIGHTRAYS-GENERATOR/)](https://poupun.github.io/LIGHTRAYS-GENERATOR/))
+![Light Rays Generator]((https://poupun.github.io/LIGHTRAYS-GENERATOR/))
 
 ## 🚀 Features
 
