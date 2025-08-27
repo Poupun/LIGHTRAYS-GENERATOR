@@ -221,9 +221,3 @@ This project is open source and available under the [MIT License](LICENSE).
 Created by **Julien Salgues** for **Asgard - Atawa Interactive**
 
 For questions, issues, or feature requests, please open an issue on GitHub.
-
----
-
-**Create stunning light ray effects in seconds! ✨**
-
-[Live Demo](https://your-demo-url.com) | [Documentation](https://github.com/your-username/LIGHTRAYS-GENERATOR/wiki) | [Examples](https://github.com/your-username/LIGHTRAYS-GENERATOR/tree/main/examples)
