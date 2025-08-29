@@ -686,7 +686,7 @@ body {
     flex-wrap: wrap;
 }
 
-.primary-btn, .secondary-btn {
+.primary-btn, .secondary-btn, .tertiary-btn {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
@@ -732,6 +732,25 @@ body {
 }
 
 .secondary-btn:active {
+    transform: translateY(-1px) scale(0.99);
+    transition: all 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tertiary-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid rgba(var(--dynamic-primary-rgb), 0.3);
+    color: var(--text-secondary);
+}
+
+.tertiary-btn:hover {
+    background: rgba(var(--dynamic-primary-rgb), 0.1);
+    border-color: var(--dynamic-primary);
+    color: var(--text-primary);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 4px 16px rgba(var(--dynamic-primary-rgb), 0.15);
+}
+
+.tertiary-btn:active {
     transform: translateY(-1px) scale(0.99);
     transition: all 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -973,6 +992,130 @@ body {
     
 }
 
+/* Presets Section */
+.presets-section {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    border: 1px solid var(--border-color);
+    margin-top: var(--space-lg);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.presets-section:hover {
+    transform: translateY(-2px);
+    border-color: rgba(var(--dynamic-primary-rgb), 0.3);
+    box-shadow: 0 4px 16px rgba(var(--dynamic-primary-rgb), 0.1);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    letter-spacing: 0.5px;
+}
+
+.section-title svg {
+    color: var(--dynamic-primary);
+    filter: drop-shadow(0 0 8px rgba(var(--dynamic-primary-rgb), 0.4));
+}
+
+.presets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-sm);
+}
+
+.preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.preset-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(var(--dynamic-primary-rgb), 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.preset-btn:hover:before {
+    left: 100%;
+}
+
+.preset-btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(var(--dynamic-primary-rgb), 0.4);
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(var(--dynamic-primary-rgb), 0.2);
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(var(--dynamic-primary-rgb), 0.3);
+}
+
+.preset-btn.active {
+    border-color: var(--dynamic-primary);
+    background: linear-gradient(135deg, var(--bg-tertiary), rgba(var(--dynamic-primary-rgb), 0.1));
+    color: var(--text-primary);
+    box-shadow: 0 4px 16px rgba(var(--dynamic-primary-rgb), 0.3);
+}
+
+.preset-btn.active svg {
+    color: var(--dynamic-primary);
+    filter: drop-shadow(0 0 8px rgba(var(--dynamic-primary-rgb), 0.6));
+}
+
+.preset-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    border-color: transparent !important;
+    color: var(--text-muted) !important;
+}
+
+.preset-btn.disabled:hover {
+    transform: none;
+    border-color: transparent;
+    color: var(--text-muted);
+    box-shadow: none;
+}
+
+.preset-btn.disabled:hover:before {
+    left: -100%;
+}
+
+.preset-btn svg {
+    transition: all 0.3s ease;
+}
+
+.preset-btn span {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
 @media (max-width: 480px) {
     .floating-controls,
     .floating-embed {
@@ -1013,7 +1156,7 @@ body {
         align-items: center;
     }
     
-    .primary-btn, .secondary-btn {
+    .primary-btn, .secondary-btn, .tertiary-btn {
         min-width: auto;
         width: 100%;
         max-width: 280px;

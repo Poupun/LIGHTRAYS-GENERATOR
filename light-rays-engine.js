@@ -15,6 +15,7 @@ class LightRaysEngine {
             color: '#2fc125',
             intensity: 0.8,
             rayCount: 30,
+            raySpread: 360,
             rayWidth: 240,
             rayHeight: 180,
             lightX: 100,
@@ -23,6 +24,7 @@ class LightRaysEngine {
             animationSpeed2: 3.0,
             animated: true,
             blurEnabled: true,
+            blurIntensity: 1.0,
             ...config
         };
 
@@ -113,24 +115,6 @@ class LightRaysEngine {
                 --animation-speed2: ${this.config.animationSpeed2};
             }
 
-            .light-rays-ambient {
-                position: absolute;
-                top: var(--light-y);
-                left: var(--light-x);
-                width: 200%;
-                height: 200%;
-                background: conic-gradient(
-                    from 225deg at center,
-                    transparent 0deg,
-                    rgba(var(--ray-r), var(--ray-g), var(--ray-b), calc(var(--intensity) * 0.3)) 45deg,
-                    rgba(var(--ray-r), var(--ray-g), var(--ray-b), calc(var(--intensity) * 0.1)) 90deg,
-                    transparent 135deg
-                );
-                transform: translate(-50%, -50%);
-                opacity: var(--intensity);
-                ${this.config.animated ? 'animation: lr-gentle-pulse calc(8s / var(--animation-speed1)) ease-in-out infinite alternate;' : ''}
-                ${this.config.blurEnabled ? 'filter: blur(60px);' : 'filter: blur(20px);'}
-            }
 
             .light-rays-ray {
                 position: absolute;
@@ -153,7 +137,7 @@ class LightRaysEngine {
                         rgba(var(--ray-r), var(--ray-g), var(--ray-b), 0.1) 80%,
                         transparent 100%
                     );
-                    filter: blur(calc(var(--ray-width) / 12)) saturate(1.2);
+                    filter: blur(calc(var(--ray-width) / 12 * ${this.config.blurIntensity})) saturate(1.2);
                 ` : `
                     background: linear-gradient(
                         to bottom,
@@ -196,7 +180,7 @@ class LightRaysEngine {
                     rgba(var(--ray-r), var(--ray-g), var(--ray-b), 0.1) 80%,
                     transparent 100%
                 );
-                filter: blur(calc(var(--ray-width) / 8));
+                filter: blur(calc(var(--ray-width) / 8 * ${this.config.blurIntensity}));
             }
 
             .light-rays-central {
@@ -215,7 +199,7 @@ class LightRaysEngine {
                 border-radius: 50%;
                 opacity: calc(var(--intensity) * 0.8);
                 ${this.config.animated ? 'animation: lr-central-glow-pulse 6s ease-in-out infinite alternate;' : ''}
-                ${this.config.blurEnabled ? 'filter: blur(30px);' : 'filter: blur(10px);'}
+                ${this.config.blurEnabled ? `filter: blur(${30 * this.config.blurIntensity}px);` : 'filter: blur(10px);'}
             }
 
             @keyframes lr-ray-combined {
@@ -264,11 +248,6 @@ class LightRaysEngine {
                 }
             }
 
-            @keyframes lr-gentle-pulse {
-                0% { opacity: calc(var(--intensity) * 0.6); transform: translate(-50%, -50%) scale(0.95); }
-                50% { opacity: calc(var(--intensity) * 0.9); transform: translate(-50%, -50%) scale(1.05); }
-                100% { opacity: calc(var(--intensity) * 0.7); transform: translate(-50%, -50%) scale(0.98); }
-            }
 
             @keyframes lr-central-glow-pulse {
                 0% { opacity: calc(var(--intensity) * 0.8); transform: scale(0.9); }
@@ -282,10 +261,7 @@ class LightRaysEngine {
         this.rayContainer.innerHTML = '';
         this.createStyleSheet();
 
-        // Create ambient light
-        const ambientLight = document.createElement('div');
-        ambientLight.className = 'light-rays-ambient';
-        this.rayContainer.appendChild(ambientLight);
+        // Ambient light removed - was causing visible background artifacts when blur was lowered
 
         // Generate Layer 1 rays
         this.generateRayLayer(1, this.config.rayCount, 0, 1, 1.5, 1, 1);
@@ -301,8 +277,8 @@ class LightRaysEngine {
 
     generateRayLayer(layer, count, angleOffset, sizeMultiplier, softMultiplier, heightMultiplier, opacityMultiplier) {
         for (let i = 0; i < count; i++) {
-            // Add randomization to angle distribution
-            const baseAngle = (360 / count) * i + angleOffset;
+            // Add randomization to angle distribution using raySpread
+            const baseAngle = (this.config.raySpread / count) * i + angleOffset;
             const angle = baseAngle + (Math.random() - 0.5) * 4; // Random ±2 degree variation
             
             // Smoother delay patterns
