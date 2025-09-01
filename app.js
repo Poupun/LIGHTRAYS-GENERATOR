@@ -9,7 +9,7 @@ class LightRaysApp {
         this.activePreset = null;
         this.prePresetConfig = null;
         this.config = {
-            color: '#2fc125',
+            color: '#00ddff',
             intensity: 0.8,
             rayCount: 30,
             raySpread: 360,
@@ -387,7 +387,7 @@ class LightRaysApp {
 
     resetToDefault() {
         const defaultConfig = {
-            color: '#2fc125',
+            color: '#00ddff',
             intensity: 0.8,
             rayCount: 30,
             raySpread: 360,
