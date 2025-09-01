@@ -16,6 +16,13 @@
             <main class="app-main">
                 <!-- Full-Screen Preview Background -->
                 <div id="preview-container" class="fullscreen-preview">
+                    <div class="center-logo" aria-hidden="true">
+                        <svg class="logo-svg" viewBox="0 0 54 36" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M51.0759 0.41425C50.5012 0.133223 49.8924 0.000197724 49.2932 0.000197724C47.7944 0.000197724 46.3537 0.83215 45.6491 2.26482L40.3992 13.0779C39.413 15.0836 40.2437 17.5067 42.2547 18.4903C44.266 19.4745 46.6953 18.6456 47.6815 16.64L52.931 5.82707C53.9172 3.8208 53.0869 1.39785 51.0759 0.41425Z" fill="currentColor"/>
+                            <path d="M26.0527 2.26462C25.3482 0.831946 23.9075 0 22.4088 0C21.8095 0 21.2007 0.133019 20.6262 0.414047C18.6152 1.39764 17.7846 3.82059 18.7708 5.82646L32.123 32.9809C33.1088 34.9863 35.5385 35.8152 37.5495 34.8312C39.5604 33.8476 40.3911 31.4247 39.4049 29.4188L26.0527 2.26462Z" fill="currentColor"/>
+                            <path d="M7.69698 2.26462C6.99256 0.831946 5.55166 0 4.05309 0C3.45383 0 2.84501 0.133019 2.27031 0.414047C0.259369 1.39764 -0.570901 3.82059 0.415284 5.82646L13.7672 32.9809C14.7533 34.9863 17.1831 35.8152 19.194 34.8312C21.205 33.8476 22.0357 31.4247 21.0495 29.4188L7.69698 2.26462Z" fill="currentColor"/>
+                        </svg>
+                    </div>
                     <div class="preview-placeholder">
                         <div class="placeholder-content">
                             <h3>Your Light Rays</h3>
@@ -62,8 +69,8 @@
                                 <div class="control-item">
                                     <label for="color">Color</label>
                                     <div class="color-input-wrapper">
-                                        <input type="color" id="color" value="#2fc125">
-                                        <span class="color-value">#2fc125</span>
+                                        <input type="color" id="color" value="#00ddff">
+                                        <span class="color-value">#00ddff</span>
                                     </div>
                                 </div>
 
@@ -80,7 +87,15 @@
                                         Ray Count
                                         <span class="control-value" id="rayCount-value">30</span>
                                     </label>
-                                    <input type="range" id="rayCount" min="4" max="30" step="1" value="30" class="slider">
+                                    <input type="range" id="rayCount" min="4" max="60" step="1" value="30" class="slider">
+                                </div>
+
+                                <div class="control-item">
+                                    <label for="raySpread">
+                                        Ray Spread
+                                        <span class="control-value" id="raySpread-value">360°</span>
+                                    </label>
+                                    <input type="range" id="raySpread" min="30" max="360" step="15" value="360" class="slider">
                                 </div>
 
                                 <div class="control-item">
@@ -91,6 +106,14 @@
                                             <span class="toggle-switch"></span>
                                         </label>
                                     </div>
+                                </div>
+
+                                <div class="control-item" id="blur-intensity-control">
+                                    <label for="blurIntensity">
+                                        Blur Intensity
+                                        <span class="control-value" id="blurIntensity-value">1.0x</span>
+                                    </label>
+                                    <input type="range" id="blurIntensity" min="0.1" max="3.0" step="0.1" value="1.0" class="slider">
                                 </div>
 
                                 <div class="control-item">
@@ -180,6 +203,40 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Presets Section -->
+                        <div class="presets-section">
+                            <h4 class="section-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                </svg>
+                                Presets
+                            </h4>
+                            <div class="presets-grid">
+                                <button class="preset-btn" data-preset="ticket-hub">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                                    </svg>
+                                    <span>Ticket Hub</span>
+                                </button>
+                                <button class="preset-btn" data-preset="jelly-creative">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                                    </svg>
+                                    <span>Jelly Creative</span>
+                                </button>
+                                <button class="preset-btn disabled" data-preset="coming-soon" disabled>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12,6 12,12 16,14"></polyline>
+                                    </svg>
+                                    <span>Coming Soon...</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -216,6 +273,13 @@
                                 </svg>
                                 React Iframe
                             </button>
+                            <button id="copy-config-link-btn" class="tertiary-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                Copy Config Link
+                            </button>
                         </div>
 
                         <div id="embed-output" class="embed-output" style="display: none;">
@@ -230,14 +294,13 @@
                                 </button>
                             </div>
                             <div id="code-output" class="code-output"></div>
-                            <div id="preview-output" class="preview-output"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Credit Text -->
                 <div class="credit-text">
-                    Par Julien Salgues, pour Asgard - Atawa Interactive
+                    © Julien SALGUES 2025 - Atawa Interactive
                 </div>
             </main>
         </div>

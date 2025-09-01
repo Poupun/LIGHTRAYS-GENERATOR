@@ -6,10 +6,13 @@
 class LightRaysApp {
     constructor() {
         this.lightRaysInstance = null;
+        this.activePreset = null;
+        this.prePresetConfig = null;
         this.config = {
-            color: '#2fc125',
+            color: '#00ddff',
             intensity: 0.8,
             rayCount: 30,
+            raySpread: 360,
             rayWidth: 240,
             rayHeight: 180,
             lightX: 100,
@@ -18,22 +21,124 @@ class LightRaysApp {
             animationSpeed2: 3.0,
             animated: true,
             blurEnabled: true,
+            blurIntensity: 1.0,
             backgroundEnabled: false,
             backgroundColor: '#000000'
+        };
+
+        this.presets = {
+            'ticket-hub': {
+                color: '#a9ffa3',
+                intensity: 0.4,
+                rayCount: 60,
+                raySpread: 360,
+                rayWidth: 240,
+                rayHeight: 160,
+                lightX: 80,
+                lightY: -10,
+                animationSpeed1: 3.0,
+                animationSpeed2: 3.0,
+                animated: true,
+                blurEnabled: true,
+                blurIntensity: 0.7,
+                backgroundEnabled: false,
+                backgroundColor: '#000000'
+            },
+            'jelly-creative': {
+                color: '#ffffff',
+                intensity: 0.7,
+                rayCount: 59,
+                raySpread: 360,
+                rayWidth: 200,
+                rayHeight: 180,
+                lightX: 50,
+                lightY: -35,
+                animationSpeed1: 1.9,
+                animationSpeed2: 2.8,
+                animated: true,
+                blurEnabled: true,
+                blurIntensity: 2.1,
+                backgroundEnabled: false,
+                backgroundColor: '#0f172a'
+            }
         };
         
         this.init();
     }
 
     init() {
+        this.loadConfigFromURL();
         this.bindEvents();
         this.initDragFunctionality();
         this.createLightRays();
         this.updateAnimationControls();
         this.updateBackgroundControls();
+        this.updateBlurControls();
         this.updateJavaScriptButtonColor(this.config.color);
         this.updateAppColorScheme(this.config.color);
         this.updatePreviewBackground();
+        this.initMobileView();
+        this.updateAllValueDisplays();
+    }
+
+    loadConfigFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const urlConfig = {};
+
+        // Parse URL parameters
+        for (const [key, value] of params.entries()) {
+            if (this.config.hasOwnProperty(key)) {
+                if (key === 'color' || key === 'backgroundColor') {
+                    // Add # back to color values
+                    urlConfig[key] = value.startsWith('#') ? value : `#${value}`;
+                } else if (key === 'animated' || key === 'blurEnabled' || key === 'backgroundEnabled') {
+                    // Convert string booleans
+                    urlConfig[key] = value === 'true';
+                } else if (typeof this.config[key] === 'number') {
+                    // Convert strings to numbers
+                    urlConfig[key] = parseFloat(value);
+                } else {
+                    urlConfig[key] = value;
+                }
+            }
+        }
+
+        // Apply URL configuration
+        if (Object.keys(urlConfig).length > 0) {
+            this.config = { ...this.config, ...urlConfig };
+            this.updateUIFromConfig();
+        }
+    }
+
+    updateUIFromConfig() {
+        // Update all UI controls to match current config
+        Object.entries(this.config).forEach(([key, value]) => {
+            const element = document.getElementById(key);
+            if (!element) return;
+
+            if (element.type === 'range' || element.type === 'color') {
+                element.value = value;
+                if (key === 'color') {
+                    document.querySelector('.color-value').textContent = value;
+                } else if (key === 'backgroundColor') {
+                    document.getElementById('background-color-value').textContent = value;
+                }
+            } else if (element.type === 'checkbox') {
+                element.checked = value;
+            }
+        });
+    }
+
+    updateAllValueDisplays() {
+        // Update all value displays
+        const rangeInputs = [
+            'intensity', 'rayCount', 'raySpread', 'rayWidth', 'rayHeight', 
+            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity'
+        ];
+        
+        rangeInputs.forEach(key => {
+            this.updateValueDisplay(key, this.config[key]);
+        });
     }
 
     bindEvents() {
@@ -56,8 +161,8 @@ class LightRaysApp {
 
         // Range inputs
         const rangeInputs = [
-            'intensity', 'rayCount', 'rayWidth', 'rayHeight', 
-            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2'
+            'intensity', 'rayCount', 'raySpread', 'rayWidth', 'rayHeight', 
+            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity'
         ];
         
         rangeInputs.forEach(id => {
@@ -83,6 +188,8 @@ class LightRaysApp {
                     } else if (id === 'backgroundEnabled') {
                         this.updateBackgroundControls();
                         this.updatePreviewBackground();
+                    } else if (id === 'blurEnabled') {
+                        this.updateBlurControls();
                     }
                 });
             }
@@ -115,6 +222,22 @@ class LightRaysApp {
         document.getElementById('copy-btn').addEventListener('click', () => {
             this.copyToClipboard();
         });
+
+        // Config link button
+        document.getElementById('copy-config-link-btn').addEventListener('click', () => {
+            this.copyConfigurationLink();
+        });
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(button => {
+            if (!button.disabled) {
+                button.addEventListener('click', () => {
+                    const presetName = button.getAttribute('data-preset');
+                    this.applyPreset(presetName);
+                });
+            }
+        });
+
     }
 
     createLightRays() {
@@ -142,6 +265,15 @@ class LightRaysApp {
     updateConfig(newConfig) {
         this.config = { ...this.config, ...newConfig };
         
+        // Clear active preset when user manually changes settings
+        if (this.activePreset) {
+            this.activePreset = null;
+            this.prePresetConfig = null;
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+        
         if (this.lightRaysInstance) {
             this.lightRaysInstance.updateConfig(this.config);
         }
@@ -159,12 +291,16 @@ class LightRaysApp {
             case 'rayHeight':
                 displayValue = `${value}vh`;
                 break;
+            case 'raySpread':
+                displayValue = `${value}°`;
+                break;
             case 'lightX':
             case 'lightY':
                 displayValue = `${value}%`;
                 break;
             case 'animationSpeed1':
             case 'animationSpeed2':
+            case 'blurIntensity':
                 displayValue = `${value.toFixed(1)}x`;
                 break;
             case 'intensity':
@@ -200,6 +336,16 @@ class LightRaysApp {
         if (backgroundColorControl) {
             backgroundColorControl.style.opacity = isBackgroundEnabled ? '1' : '0.5';
             backgroundColorControl.style.pointerEvents = isBackgroundEnabled ? 'auto' : 'none';
+        }
+    }
+
+    updateBlurControls() {
+        const blurIntensityControl = document.getElementById('blur-intensity-control');
+        const isBlurEnabled = this.config.blurEnabled;
+
+        if (blurIntensityControl) {
+            blurIntensityControl.style.opacity = isBlurEnabled ? '1' : '0.5';
+            blurIntensityControl.style.pointerEvents = isBlurEnabled ? 'auto' : 'none';
         }
     }
 
@@ -241,9 +387,10 @@ class LightRaysApp {
 
     resetToDefault() {
         const defaultConfig = {
-            color: '#2fc125',
+            color: '#00ddff',
             intensity: 0.8,
             rayCount: 30,
+            raySpread: 360,
             rayWidth: 240,
             rayHeight: 180,
             lightX: 100,
@@ -252,11 +399,19 @@ class LightRaysApp {
             animationSpeed2: 3.0,
             animated: true,
             blurEnabled: true,
+            blurIntensity: 1.0,
             backgroundEnabled: false,
             backgroundColor: '#000000'
         };
 
         this.config = { ...defaultConfig };
+
+        // Clear active preset
+        this.activePreset = null;
+        this.prePresetConfig = null;
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
 
         // Update all UI controls
         Object.entries(defaultConfig).forEach(([key, value]) => {
@@ -280,9 +435,160 @@ class LightRaysApp {
         this.createLightRays();
         this.updateAnimationControls();
         this.updateBackgroundControls();
+        this.updateBlurControls();
         this.updateJavaScriptButtonColor(defaultConfig.color);
         this.updatePreviewBackground();
         this.showNotification('Reset to default settings');
+    }
+
+    applyPreset(presetName) {
+        const preset = this.presets[presetName];
+        if (!preset) return;
+
+        const activeBtn = document.querySelector(`[data-preset="${presetName}"]`);
+        
+        // Check if this preset is already active (toggle off)
+        if (this.activePreset === presetName) {
+            // Revert to pre-preset configuration
+            if (this.prePresetConfig) {
+                this.config = { ...this.prePresetConfig };
+                this.updateUIFromConfig();
+                this.createLightRays();
+                this.updateAnimationControls();
+                this.updateBackgroundControls();
+                this.updateBlurControls();
+                this.updateJavaScriptButtonColor(this.config.color);
+                this.updateAppColorScheme(this.config.color);
+                this.updatePreviewBackground();
+                this.updateAllValueDisplays();
+            }
+            
+            // Clear active states
+            this.activePreset = null;
+            this.prePresetConfig = null;
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            this.showNotification(`Reverted "${presetName.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}" preset`);
+            return;
+        }
+
+        // Store current config before applying preset (only if no preset is currently active)
+        if (!this.activePreset) {
+            this.prePresetConfig = { ...this.config };
+        }
+
+        // Update active preset button
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        // Set active preset
+        this.activePreset = presetName;
+
+        // Apply preset configuration
+        this.config = { ...this.config, ...preset };
+
+        // Update all UI controls
+        Object.entries(preset).forEach(([key, value]) => {
+            const element = document.getElementById(key);
+            if (!element) return;
+
+            if (element.type === 'range' || element.type === 'color') {
+                element.value = value;
+                if (key === 'color') {
+                    document.querySelector('.color-value').textContent = value;
+                    this.updateJavaScriptButtonColor(value);
+                    this.updateAppColorScheme(value);
+                } else if (key === 'backgroundColor') {
+                    document.getElementById('background-color-value').textContent = value;
+                } else {
+                    this.updateValueDisplay(key, value);
+                }
+            } else if (element.type === 'checkbox') {
+                element.checked = value;
+                if (key === 'animated') {
+                    this.updateAnimationControls();
+                } else if (key === 'backgroundEnabled') {
+                    this.updateBackgroundControls();
+                    this.updatePreviewBackground();
+                } else if (key === 'blurEnabled') {
+                    this.updateBlurControls();
+                }
+            }
+        });
+
+        this.createLightRays();
+        this.showNotification(`Applied "${presetName.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}" preset`);
+    }
+
+    copyConfigurationLink() {
+        const currentUrl = window.location.origin + window.location.pathname;
+        const params = new URLSearchParams();
+        
+        // Add all config parameters to URL
+        Object.entries(this.config).forEach(([key, value]) => {
+            if ((key === 'color' || key === 'backgroundColor') && value.startsWith('#')) {
+                params.append(key, value.substring(1)); // Remove # for URL
+            } else {
+                params.append(key, value.toString());
+            }
+        });
+        
+        const configUrl = `${currentUrl}?${params.toString()}`;
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(configUrl).then(() => {
+                this.showCopySuccessForConfigLink();
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                this.fallbackCopyConfigLink(configUrl);
+            });
+        } else {
+            this.fallbackCopyConfigLink(configUrl);
+        }
+    }
+
+    showCopySuccessForConfigLink() {
+        const button = document.getElementById('copy-config-link-btn');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Link Copied!
+        `;
+        button.classList.add('success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('success');
+        }, 2000);
+    }
+
+    fallbackCopyConfigLink(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            this.showCopySuccessForConfigLink();
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            this.showNotification('Copy failed. Please select and copy manually.');
+        }
+        
+        document.body.removeChild(textArea);
     }
 
     toggleControlsPanel() {
@@ -321,17 +627,59 @@ class LightRaysApp {
         }
     }
 
+    initMobileView() {
+        // Detect if device is actually a mobile device
+        const isMobile = this.isMobileDevice();
+        
+        if (isMobile) {
+            // Minimize both panels on mobile
+            const controlsPanel = document.getElementById('controls-panel');
+            const embedPanel = document.getElementById('embed-panel');
+            
+            // Add collapsed class to both panels
+            controlsPanel.classList.add('collapsed');
+            embedPanel.classList.add('collapsed');
+            
+            // Update the toggle buttons to show expand icons
+            const controlsButton = document.getElementById('toggle-controls');
+            const embedButton = document.getElementById('toggle-embed');
+            
+            const controlsIcon = controlsButton.querySelector('svg');
+            const embedIcon = embedButton.querySelector('svg');
+            
+            // Set expand icons
+            controlsIcon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
+            embedIcon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>';
+            
+            // Update button titles
+            controlsButton.title = 'Expand Controls';
+            embedButton.title = 'Expand Embed Panel';
+        }
+    }
+
+    isMobileDevice() {
+        // Check user agent for mobile devices
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        
+        // Check for mobile user agents
+        const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+        
+        // Also check for touch capability and small screen
+        const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        return mobileRegex.test(userAgent) || (hasTouch && isSmallScreen);
+    }
+
     generateJavaScriptEmbed() {
         const embedCode = this.createJavaScriptEmbedCode();
         this.showEmbedOutput('Iframe Embed Code', embedCode);
-        this.createEmbedPreview(embedCode, 'iframe');
         this.animateEmbedOutput();
     }
 
     generateReactWidget() {
         const embedCode = this.createReactWidgetCode();
         this.showEmbedOutput('React Iframe Component', embedCode);
-        this.createEmbedPreview(embedCode, 'react');
         this.animateEmbedOutput();
     }
 
@@ -579,48 +927,6 @@ export default LightRays;
 
         // Smooth scroll to output
         embedOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    createEmbedPreview(code, type) {
-        const previewOutput = document.getElementById('preview-output');
-        previewOutput.innerHTML = `
-            <h4>Live Preview:</h4>
-            <div class="embed-preview-container" id="embed-preview"></div>
-        `;
-
-        const previewContainer = document.getElementById('embed-preview');
-        
-        if (type === 'iframe') {
-            // Create a small iframe preview
-            const embedUrl = this.generateEmbedUrl();
-            previewContainer.innerHTML = `
-                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
-                    <iframe 
-                        src="${embedUrl}" 
-                        style="width: 100%; height: 100%; border: none;"
-                        frameborder="0">
-                    </iframe>
-                </div>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
-                    ↑ Live preview of your iframe embed
-                </p>
-            `;
-        } else if (type === 'react') {
-            // For React component, show iframe preview with note
-            const embedUrl = this.generateEmbedUrl();
-            previewContainer.innerHTML = `
-                <div style="width: 100%; height: 200px; position: relative; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-primary);">
-                    <iframe 
-                        src="${embedUrl}" 
-                        style="width: 100%; height: 100%; border: none;"
-                        frameborder="0">
-                    </iframe>
-                </div>
-                <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; font-style: italic;">
-                    ↑ Preview of how your React component will look
-                </p>
-            `;
-        }
     }
 
     copyToClipboard() {
