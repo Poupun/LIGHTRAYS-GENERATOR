@@ -22,6 +22,7 @@ class LightRaysApp {
             animated: true,
             blurEnabled: true,
             blurIntensity: 1.0,
+            ambientStrength: 1.0,
             backgroundEnabled: false,
             backgroundColor: '#000000'
         };
@@ -41,6 +42,7 @@ class LightRaysApp {
                 animated: true,
                 blurEnabled: true,
                 blurIntensity: 0.7,
+                ambientStrength: 0.5,
                 backgroundEnabled: false,
                 backgroundColor: '#000000'
             },
@@ -133,7 +135,7 @@ class LightRaysApp {
         // Update all value displays
         const rangeInputs = [
             'intensity', 'rayCount', 'raySpread', 'rayWidth', 'rayHeight', 
-            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity'
+            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity', 'ambientStrength'
         ];
         
         rangeInputs.forEach(key => {
@@ -162,7 +164,7 @@ class LightRaysApp {
         // Range inputs
         const rangeInputs = [
             'intensity', 'rayCount', 'raySpread', 'rayWidth', 'rayHeight', 
-            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity'
+            'lightX', 'lightY', 'animationSpeed1', 'animationSpeed2', 'blurIntensity', 'ambientStrength'
         ];
         
         rangeInputs.forEach(id => {
@@ -301,6 +303,7 @@ class LightRaysApp {
             case 'animationSpeed1':
             case 'animationSpeed2':
             case 'blurIntensity':
+            case 'ambientStrength':
                 displayValue = `${value.toFixed(1)}x`;
                 break;
             case 'intensity':
@@ -400,6 +403,7 @@ class LightRaysApp {
             animated: true,
             blurEnabled: true,
             blurIntensity: 1.0,
+            ambientStrength: 1.0,
             backgroundEnabled: false,
             backgroundColor: '#000000'
         };

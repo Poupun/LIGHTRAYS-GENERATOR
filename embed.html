@@ -52,6 +52,7 @@
             const paramMap = {
                 'color': (val) => val.startsWith('#') ? val : '#' + val,
                 'intensity': (val) => parseFloat(val),
+                'ambientStrength': (val) => parseFloat(val),
                 'rayCount': (val) => parseInt(val),
                 'rayWidth': (val) => parseInt(val),
                 'rayHeight': (val) => parseInt(val),

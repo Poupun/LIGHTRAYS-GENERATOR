@@ -25,6 +25,7 @@ class LightRaysEngine {
             animated: true,
             blurEnabled: true,
             blurIntensity: 1.0,
+            ambientStrength: 1.0,
             ...config
         };
 
@@ -73,9 +74,10 @@ class LightRaysEngine {
         this.rayContainer.style.setProperty('--ray-g', rgb.g.toString());
         this.rayContainer.style.setProperty('--ray-b', rgb.b.toString());
         this.rayContainer.style.setProperty('--intensity', this.config.intensity.toString());
-    // Ambient gradient strengths scale with intensity; tuned to be subtle
-    const ambientAlphaTop = Math.max(0, Math.min(0.6, 0.45 * this.config.intensity));
-    const ambientAlphaMid = Math.max(0, Math.min(0.4, 0.25 * this.config.intensity));
+    // Ambient gradient strengths scale with intensity and user ambientStrength
+    const ambS = Math.max(0, parseFloat(this.config.ambientStrength ?? 1.0));
+    const ambientAlphaTop = Math.max(0, Math.min(0.6, (0.36 * this.config.intensity) * ambS));
+    const ambientAlphaMid = Math.max(0, Math.min(0.4, (0.20 * this.config.intensity) * ambS));
     this.rayContainer.style.setProperty('--ambient-alpha-top', ambientAlphaTop.toString());
     this.rayContainer.style.setProperty('--ambient-alpha-mid', ambientAlphaMid.toString());
         this.rayContainer.style.setProperty('--light-x', this.config.lightX + '%');
@@ -112,8 +114,8 @@ class LightRaysEngine {
                 --ray-g: ${this.hexToRgb(this.config.color).g};
                 --ray-b: ${this.hexToRgb(this.config.color).b};
                 --intensity: ${this.config.intensity};
-                --ambient-alpha-top: ${Math.max(0, Math.min(0.6, 0.45 * this.config.intensity))};
-                --ambient-alpha-mid: ${Math.max(0, Math.min(0.4, 0.25 * this.config.intensity))};
+                --ambient-alpha-top: ${Math.max(0, Math.min(0.6, (0.36 * this.config.intensity) * Math.max(0, parseFloat(this.config.ambientStrength ?? 1.0))))};
+                --ambient-alpha-mid: ${Math.max(0, Math.min(0.4, (0.20 * this.config.intensity) * Math.max(0, parseFloat(this.config.ambientStrength ?? 1.0))))};
                 --light-x: ${this.config.lightX}%;
                 --light-y: ${this.config.lightY}%;
                 --ray-width: ${this.config.rayWidth}px;
