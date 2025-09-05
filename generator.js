@@ -386,6 +386,7 @@ function generateIframe() {
             const embedCode = `<!-- Light Rays Effect - Exact Configuration Match -->
 <div class="light-rays-generated" style="position: relative; width: 100%; height: 400px; background: #000; overflow: hidden; border-radius: 10px;">
 <style>
+.light-rays-generated { color-scheme: normal; }
 .light-rays-generated {
     --primary-color: ${config.color};
     --ray-r: ${rgb.r}; --ray-g: ${rgb.g}; --ray-b: ${rgb.b};
