@@ -73,6 +73,11 @@ class LightRaysEngine {
         this.rayContainer.style.setProperty('--ray-g', rgb.g.toString());
         this.rayContainer.style.setProperty('--ray-b', rgb.b.toString());
         this.rayContainer.style.setProperty('--intensity', this.config.intensity.toString());
+    // Ambient gradient strengths scale with intensity; tuned to be subtle
+    const ambientAlphaTop = Math.max(0, Math.min(0.6, 0.45 * this.config.intensity));
+    const ambientAlphaMid = Math.max(0, Math.min(0.4, 0.25 * this.config.intensity));
+    this.rayContainer.style.setProperty('--ambient-alpha-top', ambientAlphaTop.toString());
+    this.rayContainer.style.setProperty('--ambient-alpha-mid', ambientAlphaMid.toString());
         this.rayContainer.style.setProperty('--light-x', this.config.lightX + '%');
         this.rayContainer.style.setProperty('--light-y', this.config.lightY + '%');
         this.rayContainer.style.setProperty('--ray-width', this.config.rayWidth + 'px');
@@ -107,12 +112,28 @@ class LightRaysEngine {
                 --ray-g: ${this.hexToRgb(this.config.color).g};
                 --ray-b: ${this.hexToRgb(this.config.color).b};
                 --intensity: ${this.config.intensity};
+                --ambient-alpha-top: ${Math.max(0, Math.min(0.6, 0.45 * this.config.intensity))};
+                --ambient-alpha-mid: ${Math.max(0, Math.min(0.4, 0.25 * this.config.intensity))};
                 --light-x: ${this.config.lightX}%;
                 --light-y: ${this.config.lightY}%;
                 --ray-width: ${this.config.rayWidth}px;
                 --ray-height: ${this.config.rayHeight}vh;
                 --animation-speed1: ${this.config.animationSpeed1};
                 --animation-speed2: ${this.config.animationSpeed2};
+            }
+
+            /* Subtle ambient gradient wash from top to bottom in ray color */
+            .light-rays-ambient {
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+                z-index: 0;
+                background: linear-gradient(
+                    to bottom,
+                    rgba(var(--ray-r), var(--ray-g), var(--ray-b), var(--ambient-alpha-top)) 0%,
+                    rgba(var(--ray-r), var(--ray-g), var(--ray-b), var(--ambient-alpha-mid)) 25%,
+                    rgba(var(--ray-r), var(--ray-g), var(--ray-b), 0) 80%
+                );
             }
 
 
@@ -261,7 +282,10 @@ class LightRaysEngine {
         this.rayContainer.innerHTML = '';
         this.createStyleSheet();
 
-        // Ambient light removed - was causing visible background artifacts when blur was lowered
+    // Add ambient gradient (no blur, avoids previous artifact issues)
+    const ambient = document.createElement('div');
+    ambient.className = 'light-rays-ambient';
+    this.rayContainer.appendChild(ambient);
 
         // Generate Layer 1 rays
         this.generateRayLayer(1, this.config.rayCount, 0, 1, 1.5, 1, 1);
